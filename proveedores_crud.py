@@ -93,7 +93,7 @@ def crud_proveedores(permisos="admin"):
     # --- Tabla de proveedores (listar, editar, eliminar) ---
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM proveedores ORDER BY id")
+    cur.execute("SELECT * FROM proveedores ORDER BY id desc")
     rows = cur.fetchall()
     cur.close()
     conn.close()

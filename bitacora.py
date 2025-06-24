@@ -1,4 +1,4 @@
-#bitacora.py
+# bitacora.py
 import streamlit as st
 import socket
 import platform
@@ -13,8 +13,8 @@ def get_user_info():
     - Navegador (desde sesión)
     """
     try:
-        # La IP real no es fácil de obtener desde Streamlit web, pero puedes intentar capturarla así:
-        ip = st.experimental_get_query_params().get('ip', ['Desconocido'])[0]
+        # Usa la API nueva de Streamlit
+        ip = st.query_params.get('ip', ['Desconocido'])[0]
     except:
         ip = "Desconocido"
     try:

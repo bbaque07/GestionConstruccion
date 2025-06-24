@@ -98,7 +98,7 @@ def crud_clientes(permisos="admin"):
 
     # --- Listado y eliminación de clientes ---
     conn = get_connection()
-    df = pd.read_sql("SELECT * FROM clientes ORDER BY id", conn)
+    df = pd.read_sql("SELECT * FROM clientes ORDER BY id desc", conn)
     conn.close()
     st.write("Listado de clientes:")
     for idx, row in df.iterrows():

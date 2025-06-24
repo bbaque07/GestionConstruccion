@@ -1,4 +1,4 @@
-#proyects_crud.py
+#proyectos_crud.py
 import streamlit as st
 import pandas as pd
 from config import get_connection
@@ -92,7 +92,7 @@ def crud_proyectos(permisos="admin"):
 
     # --- Tabla de proyectos ---
     conn = get_connection()
-    df = pd.read_sql("SELECT * FROM proyectos ORDER BY id", conn)
+    df = pd.read_sql("SELECT * FROM proyectos ORDER BY id desc", conn)
     conn.close()
     st.write("Listado de proyectos:")
     for idx, row in df.iterrows():

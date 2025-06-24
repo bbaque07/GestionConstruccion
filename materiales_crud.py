@@ -95,7 +95,7 @@ def crud_materiales(permisos="admin"):
 
     # --- Listado y eliminación de materiales ---
     conn = get_connection()
-    df = pd.read_sql("SELECT * FROM materiales ORDER BY id", conn)
+    df = pd.read_sql("SELECT * FROM materiales ORDER BY id desc", conn)
     conn.close()
     st.write("Listado de materiales:")
     for idx, row in df.iterrows():

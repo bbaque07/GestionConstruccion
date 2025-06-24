@@ -1,40 +1,56 @@
-#paginador.py
+# paginador.py
 import streamlit as st
 import pandas as pd
-from math import ceil
 from config import get_connection
 
 # --- Paginador para proveedores ---
 def paginar_proveedores():
     st.title("🔍 Buscador de Proveedores")
+    # Ciudades para filtro
     conn = get_connection()
-    df = pd.read_sql("SELECT * FROM proveedores ORDER BY id", conn)
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT ciudad FROM proveedores WHERE ciudad IS NOT NULL")
+    ciudades = ["Todas"] + sorted([row[0] for row in cur.fetchall()])
+    cur.close()
     conn.close()
+
     with st.expander("🔍 Filtros", expanded=True):
         busqueda = st.text_input("Buscar por nombre o contacto:")
-        ciudades = ["Todas"] + sorted(df["ciudad"].dropna().unique())
         ciudad = st.selectbox("Ciudad:", ciudades)
-    proveedores_filtrados = df.copy()
+
+    condiciones = []
+    params = []
     if busqueda:
-        proveedores_filtrados = proveedores_filtrados[
-            proveedores_filtrados["nombre"].str.lower().str.contains(busqueda.lower()) |
-            proveedores_filtrados["contacto"].str.lower().str.contains(busqueda.lower())
-        ]
+        condiciones.append("(LOWER(nombre) LIKE %s OR LOWER(contacto) LIKE %s)")
+        like = f"%{busqueda.lower()}%"
+        params += [like, like]
     if ciudad != "Todas":
-        proveedores_filtrados = proveedores_filtrados[proveedores_filtrados["ciudad"] == ciudad]
+        condiciones.append("ciudad = %s")
+        params.append(ciudad)
+    where_sql = "WHERE " + " AND ".join(condiciones) if condiciones else ""
+
     items_por_pagina = 3
-    total_paginas = ceil(len(proveedores_filtrados) / items_por_pagina) if len(proveedores_filtrados) > 0 else 1
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(f"SELECT COUNT(*) FROM proveedores {where_sql}", params)
+    total = cur.fetchone()[0]
+    total_paginas = max(1, -(-total // items_por_pagina))
     pagina = st.number_input("Página:", min_value=1, max_value=total_paginas, value=1, key="prov_page")
-    inicio = (pagina - 1) * items_por_pagina
-    fin = inicio + items_por_pagina
-    datos_pagina = proveedores_filtrados.iloc[inicio:fin]
-    st.caption(f"Mostrando {len(datos_pagina)} de {len(proveedores_filtrados)} resultados. Página {pagina} de {total_paginas}")
-    if not datos_pagina.empty:
-        st.dataframe(
-            datos_pagina[["id", "nombre", "contacto", "ciudad"]],
-            hide_index=True,
-            use_container_width=True,
-        )
+    offset = (pagina - 1) * items_por_pagina
+
+    cur.execute(
+        f"SELECT id, nombre, contacto, ciudad FROM proveedores {where_sql} ORDER BY id LIMIT %s OFFSET %s",
+        params + [items_por_pagina, offset]
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    st.caption(f"Mostrando {len(rows)} de {total} resultados. Página {pagina} de {total_paginas}")
+
+    if rows:
+        df = pd.DataFrame(rows, columns=["id", "nombre", "contacto", "ciudad"])
+        st.dataframe(df, hide_index=True, use_container_width=True)
     else:
         st.warning("No hay resultados con los filtros aplicados.")
 
@@ -42,92 +58,128 @@ def paginar_proveedores():
 def paginar_clientes():
     st.title("🔍 Buscador de Clientes")
     conn = get_connection()
-    df = pd.read_sql("SELECT * FROM clientes ORDER BY id", conn)
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT ciudad FROM clientes WHERE ciudad IS NOT NULL")
+    ciudades = ["Todas"] + sorted([row[0] for row in cur.fetchall()])
+    cur.close()
     conn.close()
+
     with st.expander("🔍 Filtros", expanded=True):
         busqueda = st.text_input("Buscar por nombre o contacto:", key="cli_busq")
-        ciudades = ["Todas"] + sorted(df["ciudad"].dropna().unique())
         ciudad = st.selectbox("Ciudad:", ciudades, key="cli_ciudad")
-    clientes_filtrados = df.copy()
+
+    condiciones = []
+    params = []
     if busqueda:
-        clientes_filtrados = clientes_filtrados[
-            clientes_filtrados["nombre"].str.lower().str.contains(busqueda.lower()) |
-            clientes_filtrados["contacto"].str.lower().str.contains(busqueda.lower())
-        ]
+        condiciones.append("(LOWER(nombre) LIKE %s OR LOWER(contacto) LIKE %s)")
+        like = f"%{busqueda.lower()}%"
+        params += [like, like]
     if ciudad != "Todas":
-        clientes_filtrados = clientes_filtrados[clientes_filtrados["ciudad"] == ciudad]
+        condiciones.append("ciudad = %s")
+        params.append(ciudad)
+    where_sql = "WHERE " + " AND ".join(condiciones) if condiciones else ""
+
     items_por_pagina = 3
-    total_paginas = ceil(len(clientes_filtrados) / items_por_pagina) if len(clientes_filtrados) > 0 else 1
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(f"SELECT COUNT(*) FROM clientes {where_sql}", params)
+    total = cur.fetchone()[0]
+    total_paginas = max(1, -(-total // items_por_pagina))
     pagina = st.number_input("Página:", min_value=1, max_value=total_paginas, value=1, key="cli_page")
-    inicio = (pagina - 1) * items_por_pagina
-    fin = inicio + items_por_pagina
-    datos_pagina = clientes_filtrados.iloc[inicio:fin]
-    st.caption(f"Mostrando {len(datos_pagina)} de {len(clientes_filtrados)} resultados. Página {pagina} de {total_paginas}")
-    if not datos_pagina.empty:
-        st.dataframe(
-            datos_pagina[["id", "nombre", "contacto", "ciudad"]],
-            hide_index=True,
-            use_container_width=True,
-        )
+    offset = (pagina - 1) * items_por_pagina
+
+    cur.execute(
+        f"SELECT id, nombre, contacto, ciudad FROM clientes {where_sql} ORDER BY id LIMIT %s OFFSET %s",
+        params + [items_por_pagina, offset]
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    st.caption(f"Mostrando {len(rows)} de {total} resultados. Página {pagina} de {total_paginas}")
+
+    if rows:
+        df = pd.DataFrame(rows, columns=["id", "nombre", "contacto", "ciudad"])
+        st.dataframe(df, hide_index=True, use_container_width=True)
     else:
         st.warning("No hay resultados con los filtros aplicados.")
 
 # --- Paginador para materiales ---
 def paginar_materiales():
     st.title("🔍 Buscador de Materiales")
-    conn = get_connection()
-    df = pd.read_sql("SELECT * FROM materiales ORDER BY id", conn)
-    conn.close()
     with st.expander("🔍 Filtros", expanded=True):
         busqueda = st.text_input("Buscar por nombre o unidad:", key="mat_busq")
-    materiales_filtrados = df.copy()
+
+    condiciones = []
+    params = []
     if busqueda:
-        materiales_filtrados = materiales_filtrados[
-            materiales_filtrados["nombre"].str.lower().str.contains(busqueda.lower()) |
-            materiales_filtrados["unidad"].str.lower().str.contains(busqueda.lower())
-        ]
+        condiciones.append("(LOWER(nombre) LIKE %s OR LOWER(unidad) LIKE %s)")
+        like = f"%{busqueda.lower()}%"
+        params += [like, like]
+    where_sql = "WHERE " + " AND ".join(condiciones) if condiciones else ""
+
     items_por_pagina = 3
-    total_paginas = ceil(len(materiales_filtrados) / items_por_pagina) if len(materiales_filtrados) > 0 else 1
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(f"SELECT COUNT(*) FROM materiales {where_sql}", params)
+    total = cur.fetchone()[0]
+    total_paginas = max(1, -(-total // items_por_pagina))
     pagina = st.number_input("Página:", min_value=1, max_value=total_paginas, value=1, key="mat_page")
-    inicio = (pagina - 1) * items_por_pagina
-    fin = inicio + items_por_pagina
-    datos_pagina = materiales_filtrados.iloc[inicio:fin]
-    st.caption(f"Mostrando {len(datos_pagina)} de {len(materiales_filtrados)} resultados. Página {pagina} de {total_paginas}")
-    if not datos_pagina.empty:
-        st.dataframe(
-            datos_pagina[["id", "nombre", "unidad", "stock", "precio"]],
-            hide_index=True,
-            use_container_width=True,
-        )
+    offset = (pagina - 1) * items_por_pagina
+
+    cur.execute(
+        f"SELECT id, nombre, unidad, stock, precio FROM materiales {where_sql} ORDER BY id LIMIT %s OFFSET %s",
+        params + [items_por_pagina, offset]
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    st.caption(f"Mostrando {len(rows)} de {total} resultados. Página {pagina} de {total_paginas}")
+
+    if rows:
+        df = pd.DataFrame(rows, columns=["id", "nombre", "unidad", "stock", "precio"])
+        st.dataframe(df, hide_index=True, use_container_width=True)
     else:
         st.warning("No hay resultados con los filtros aplicados.")
 
 # --- Paginador para proyectos ---
 def paginar_proyectos():
     st.title("🔍 Buscador de Proyectos")
-    conn = get_connection()
-    df = pd.read_sql("SELECT * FROM proyectos ORDER BY id", conn)
-    conn.close()
     with st.expander("🔍 Filtros", expanded=True):
         busqueda = st.text_input("Buscar por nombre o descripción:", key="proy_busq")
-    proyectos_filtrados = df.copy()
+
+    condiciones = []
+    params = []
     if busqueda:
-        proyectos_filtrados = proyectos_filtrados[
-            proyectos_filtrados["nombre"].str.lower().str.contains(busqueda.lower()) |
-            proyectos_filtrados["descripcion"].str.lower().str.contains(busqueda.lower())
-        ]
+        condiciones.append("(LOWER(nombre) LIKE %s OR LOWER(descripcion) LIKE %s)")
+        like = f"%{busqueda.lower()}%"
+        params += [like, like]
+    where_sql = "WHERE " + " AND ".join(condiciones) if condiciones else ""
+
     items_por_pagina = 3
-    total_paginas = ceil(len(proyectos_filtrados) / items_por_pagina) if len(proyectos_filtrados) > 0 else 1
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(f"SELECT COUNT(*) FROM proyectos {where_sql}", params)
+    total = cur.fetchone()[0]
+    total_paginas = max(1, -(-total // items_por_pagina))
     pagina = st.number_input("Página:", min_value=1, max_value=total_paginas, value=1, key="proy_page")
-    inicio = (pagina - 1) * items_por_pagina
-    fin = inicio + items_por_pagina
-    datos_pagina = proyectos_filtrados.iloc[inicio:fin]
-    st.caption(f"Mostrando {len(datos_pagina)} de {len(proyectos_filtrados)} resultados. Página {pagina} de {total_paginas}")
-    if not datos_pagina.empty:
-        st.dataframe(
-            datos_pagina[["id", "nombre", "descripcion", "fecha_inicio", "fecha_fin", "cliente_id"]],
-            hide_index=True,
-            use_container_width=True,
-        )
+    offset = (pagina - 1) * items_por_pagina
+
+    cur.execute(
+        f"SELECT id, nombre, descripcion, fecha_inicio, fecha_fin, cliente_id FROM proyectos {where_sql} ORDER BY id LIMIT %s OFFSET %s",
+        params + [items_por_pagina, offset]
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    st.caption(f"Mostrando {len(rows)} de {total} resultados. Página {pagina} de {total_paginas}")
+
+    if rows:
+        df = pd.DataFrame(rows, columns=["id", "nombre", "descripcion", "fecha_inicio", "fecha_fin", "cliente_id"])
+        st.dataframe(df, hide_index=True, use_container_width=True)
     else:
         st.warning("No hay resultados con los filtros aplicados.")
+
+# --- Fin de paginador.py ---
