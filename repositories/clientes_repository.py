@@ -1,7 +1,7 @@
+# repositories/clientes_repository.py
 import pandas as pd
 from config import get_connection
 
-# ────────────── CRUD ─────────────────
 
 def obtener_cliente_por_id(cliente_id):
     conn = get_connection()
@@ -18,10 +18,8 @@ def obtener_todos_los_clientes():
 def crear_cliente(nombre, contacto, telefono, direccion, ciudad, ruc):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO clientes (nombre, contacto, telefono, direccion, ciudad, ruc)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (nombre, contacto, telefono, direccion, ciudad, ruc))
+    cur.execute("SELECT crear_cliente_seguro(%s, %s, %s, %s, %s, %s)", 
+                (nombre, contacto, telefono, direccion, ciudad, ruc))
     conn.commit()
     cur.close()
     conn.close()
@@ -29,11 +27,8 @@ def crear_cliente(nombre, contacto, telefono, direccion, ciudad, ruc):
 def actualizar_cliente(cliente_id, nombre, contacto, telefono, direccion, ciudad, ruc):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        UPDATE clientes
-        SET nombre=%s, contacto=%s, telefono=%s, direccion=%s, ciudad=%s, ruc=%s
-        WHERE id=%s
-    """, (nombre, contacto, telefono, direccion, ciudad, ruc, cliente_id))
+    cur.execute("CALL actualizar_cliente_seguro(%s, %s, %s, %s, %s, %s, %s)", 
+                (nombre, contacto, telefono, direccion, ciudad, ruc, cliente_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -41,7 +36,7 @@ def actualizar_cliente(cliente_id, nombre, contacto, telefono, direccion, ciudad
 def eliminar_cliente(cliente_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM clientes WHERE id=%s", (cliente_id,))
+    cur.execute("CALL eliminar_cliente_seguro(%s)", (cliente_id,))
     conn.commit()
     cur.close()
     conn.close()

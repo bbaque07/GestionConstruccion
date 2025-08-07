@@ -14,12 +14,7 @@ def crear_material(nombre, unidad, stock, precio):
         st.error("El nombre es obligatorio.")
         return
     insertar_material(nombre, unidad, stock, precio)
-    registrar_bitacora(
-        usuario=st.session_state["usuario"]["usuario"],
-        tabla="materiales",
-        tipo_accion="crear",
-        descripcion=f"Creó material '{nombre}' (unidad={unidad}, stock={stock}, precio={precio})"
-    )
+    
     st.success("Material registrado correctamente.")
     st.rerun()
 
@@ -34,12 +29,7 @@ def obtener_material_por_id(id_):
 
 def actualizar_material(id_, nombre, unidad, stock, precio):
     actualizar_material_db(id_, nombre, unidad, stock, precio)
-    registrar_bitacora(
-        usuario=st.session_state["usuario"]["usuario"],
-        tabla="materiales",
-        tipo_accion="actualizar",
-        descripcion=f"Actualizó material id={id_}: nombre={nombre}, unidad={unidad}, stock={stock}, precio={precio}"
-    )
+    
     st.success("Material actualizado.")
     st.session_state["editando_material_id"] = None
     st.rerun()

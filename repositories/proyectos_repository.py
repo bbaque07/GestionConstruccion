@@ -1,3 +1,4 @@
+# repositories/proyectos_repository.py
 import pandas as pd
 from config import get_connection
 
@@ -10,13 +11,11 @@ def obtener_todos_proyectos():
 def crear_nuevo_proyecto(nombre, descripcion, fecha_inicio, fecha_fin, cliente_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO proyectos (nombre, descripcion, fecha_inicio, fecha_fin, cliente_id) VALUES (%s, %s, %s, %s, %s)",
-        (nombre, descripcion, fecha_inicio, fecha_fin, cliente_id)
-    )
+    cur.execute("CALL crear_nuevo_proyecto(%s, %s, %s, %s, %s)", (nombre, descripcion, fecha_inicio, fecha_fin, cliente_id))
     conn.commit()
     cur.close()
     conn.close()
+
 
 def actualizar_proyecto_db(id, nombre, descripcion, fecha_inicio, fecha_fin, cliente_id):
     conn = get_connection()

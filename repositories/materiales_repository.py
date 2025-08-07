@@ -1,3 +1,4 @@
+# repositories/materiales_repository.py
 from config import get_connection
 
 def insertar_material(nombre, unidad, stock, precio):
@@ -15,7 +16,7 @@ def insertar_material(nombre, unidad, stock, precio):
 def obtener_todos_los_materiales():
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM materiales ORDER BY id DESC")
+    cur.execute("SELECT * FROM obtener_todos_los_materiales()")
     rows = cur.fetchall()
     cols = [desc[0] for desc in cur.description]
     cur.close()
@@ -37,10 +38,8 @@ def obtener_material_por_id_db(id_):
 def actualizar_material_db(id_, nombre, unidad, stock, precio):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute(
-        "UPDATE materiales SET nombre=%s, unidad=%s, stock=%s, precio=%s WHERE id=%s",
-        (nombre, unidad, stock, precio, id_)
-    )
+    cur.execute("SELECT actualizar_material_seguro(%s, %s, %s, %s, %s)", 
+                (nombre, unidad, stock, precio, id_))
     conn.commit()
     cur.close()
     conn.close()

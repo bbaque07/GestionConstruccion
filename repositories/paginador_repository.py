@@ -1,3 +1,4 @@
+# repositories/paginador_repository.py
 from config import get_connection
 
 def obtener_ciudades_distintas(tabla):

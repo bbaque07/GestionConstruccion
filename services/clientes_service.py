@@ -15,22 +15,12 @@ def crear_cliente_service(nombre, contacto, telefono, direccion, ciudad, ruc):
     )
 
 def actualizar_cliente_service(cliente_id, nombre, contacto, telefono, direccion, ciudad, ruc):
+    cliente_id = int(cliente_id)  # ← Esta línea soluciona el error
     actualizar_cliente(cliente_id, nombre, contacto, telefono, direccion, ciudad, ruc)
-    registrar_bitacora(
-        usuario=st.session_state["usuario"]["usuario"],
-        tabla="clientes",
-        tipo_accion="actualizar",
-        descripcion=f"Actualizó cliente id={cliente_id}: nombre={nombre}, contacto={contacto}, telefono={telefono}, direccion={direccion}, ciudad={ciudad}, ruc={ruc}"
-    )
-
+    
 def eliminar_cliente_service(cliente_id, nombre_cliente):
     if cliente_esta_en_proyectos(cliente_id):
         return False, "No puedes eliminar este cliente porque está asociado a uno o más proyectos."
     eliminar_cliente(cliente_id)
-    registrar_bitacora(
-        usuario=st.session_state["usuario"]["usuario"],
-        tabla="clientes",
-        tipo_accion="eliminar",
-        descripcion=f"Eliminó cliente '{nombre_cliente}' con id={cliente_id}"
-    )
+    
     return True, f"Cliente {nombre_cliente} eliminado."

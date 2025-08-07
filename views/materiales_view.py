@@ -36,8 +36,8 @@ def formulario_creacion_material(callback):
 def formulario_edicion_material(material, callback_actualizar, callback_cancelar):
     nombre = st.text_input("Nombre", value=material["nombre"], key="material_nombre_edit")
     unidad = st.text_input("Unidad", value=material["unidad"], key="material_unidad_edit")
-    stock = st.number_input("Stock", min_value=0, value=material["stock"], key="material_stock_edit")
-    precio = st.number_input("Precio", min_value=0.0, value=float(material["precio"]), key="material_precio_edit")
+    stock = st.number_input("Stock", value=float(material["stock"]), key="material_stock_edit")
+    precio = st.number_input("Precio", value=float(material["precio"]), key="material_precio_edit")
 
     if st.button("Actualizar"):
         callback_actualizar(nombre, unidad, stock, precio)

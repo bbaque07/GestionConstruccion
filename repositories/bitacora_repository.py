@@ -1,3 +1,4 @@
+# repositories/bitacora_repository.py
 from config import get_connection
 
 def insertar_registro_bitacora(usuario, hora_ingreso, hora_salida, navegador, ip, maquina, tabla, tipo_accion, descripcion):
